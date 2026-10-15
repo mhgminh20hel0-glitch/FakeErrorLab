@@ -3,7 +3,9 @@ name: Build Fake Error Lab APK
 on:
   workflow_dispatch:
   push:
-    branches: [ main, master ]
+    branches:
+      - main
+      - master
 
 permissions:
   contents: read
@@ -22,16 +24,32 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Accept Android SDK licenses
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          cmdline-tools-version: 'latest'
+          accept-android-sdk-licenses: true
+
+      - name: Accept SDK licenses
         run: yes | sdkmanager --licenses
 
       - name: Install Android SDK packages
-        run: sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+        run: |
+          sdkmanager \
+            "platform-tools" \
+            "platforms;android-33" \
+            "build-tools;33.0.2"
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '7.5.1'
+
+      - name: Check project files
+        run: |
+          test -f settings.gradle
+          test -f build.gradle
+          test -f app/build.gradle
 
       - name: Build debug APK
         run: gradle --no-daemon assembleDebug
